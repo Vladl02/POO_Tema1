@@ -1,0 +1,5 @@
+.vscode/
+*.exe
+*.obj
+*.pdb
+test.cpp
