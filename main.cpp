@@ -1,7 +1,7 @@
 #include <iostream>
+#include <iomanip>
 #include <cstring>
 const int recordCapacity = 10;
-
 
 
 char* create_string_copy(const char* word_init){
@@ -9,7 +9,6 @@ char* create_string_copy(const char* word_init){
     word_dest = strcpy(word_dest, word_init);
     return word_dest;
 }
-
 
 struct Record {
     int capacity;
@@ -35,6 +34,27 @@ struct Record {
         price_buying = new double[recordCapacity];
         price_selling = new double[recordCapacity];
     }
+    Record(const Record& r){
+        filled = r.filled;
+        capacity = r.capacity;
+        date = create_string_copy(r.date);
+        currencies = new char*[r.capacity];
+        price_buying = new double[r.capacity];
+        price_selling = new double[r.capacity];
+
+        for (int i=0; i<filled; i++){
+            currencies[i] = create_string_copy(r.currencies[i]);
+        }
+        for (int i=0; i<filled; i++){
+            price_buying[i] = r.price_buying[i];
+        }
+        for (int i=0; i<filled; i++){
+            price_selling[i] = r.price_selling[i];
+        }
+    }
+
+    Record operator=(const Record& r);
+
 
     ~Record(){
         delete[] date;
@@ -47,6 +67,38 @@ struct Record {
     }
 };
 
+
+Record Record::operator=(const Record& r){
+
+    if (date != nullptr){
+        delete[] date;
+    }
+    date = create_string_copy(r.date);
+    
+    if (currencies != nullptr){
+        for (int i=0; i<filled; i++) delete[] currencies[i];
+        delete[] currencies;
+    }
+    if (price_buying != nullptr){
+        delete[] price_buying;
+    }
+    if (price_selling != nullptr){
+        delete[] price_selling;
+    }
+    filled = r.filled;
+    capacity = r.capacity;
+
+    currencies = new char*[r.capacity];
+    price_buying = new double[r.capacity];
+    price_selling = new double[r.capacity];
+
+    for (int i=0; i<filled; i++){
+        currencies[i] = create_string_copy(r.currencies[i]);
+        price_buying[i] = r.price_buying[i];
+        price_selling[i] = r.price_selling[i];
+    }
+    return (*this);
+}
 
 
 void add_currency(Record* record, char* currency, double priceBuy, double priceSell){
@@ -67,6 +119,7 @@ private:
 public:
 
     Currency();
+    Currency(const Currency& currency);
     Currency(const char* name);
     Currency(const char* name, const double& total);
 
@@ -77,11 +130,18 @@ public:
     void setName(const char* name);
     void setTotal(const double& total);
 
+    friend std::ostream& operator<<(std::ostream& out, Currency& history);
+    Currency operator=(const Currency c);
+
     ~Currency();
 };
 
 Currency::Currency(){ 
     name = nullptr; total = 0; 
+}
+Currency::Currency(const Currency& currency){
+    name = create_string_copy(currency.name);
+    total = currency.total;
 }
 Currency::Currency(const char* name) { 
     this->name = create_string_copy(name);
@@ -92,23 +152,37 @@ Currency::Currency(const char* name, const double& total){
     this->total = total; 
 };
 
+
+std::ostream& operator<<(std::ostream& out, Currency& currency){
+    out << "Currency: " << currency.name << " Total: " << std::fixed << std::setprecision(2) << currency.total << '\n';
+    return out;
+}
+
+
 void Currency::setName(const char* name){
     if (this->name != nullptr){
         delete[] this->name;
     }
-    this->name = new char[strlen(name)+1];
-    this->name = strcpy(this->name, name);
+    this->name = create_string_copy(name);
 }
 void Currency::setTotal(const double& total){
     this->total = total;
 }
 
-Currency::~Currency(){
-    delete[] name;
-    std::cout << "deleted curency" << '\n';
+
+Currency Currency::operator=(const Currency c){
+    if (this->name != nullptr){
+        delete[] this->name;
+    }
+    name = create_string_copy(c.name);
+    total = c.total;
+    return (*this);
 }
 
 
+Currency::~Currency(){
+    delete[] name;
+}
 
 
 class CurrencyHistory{
@@ -119,6 +193,7 @@ private:
     Record** records;
 public:
     CurrencyHistory(const Currency& c, int h);
+    CurrencyHistory(const CurrencyHistory& mainCurrency);
 
     double getSellingPrice(const Currency& currency, const char* date) const;
     double getBuyingPrice(const Currency& currency, const char* date) const;
@@ -142,6 +217,16 @@ CurrencyHistory::CurrencyHistory(const Currency& c, int h)
     }
 }
 
+CurrencyHistory::CurrencyHistory(const CurrencyHistory& history)
+    : mainCurrency(history.mainCurrency), historyCapacity(history.historyCapacity), filledHistory(history.filledHistory){
+    this->records = new Record*[historyCapacity];
+    for (int i = 0; i < historyCapacity; i++) {
+        this->records[i] = nullptr;
+    }
+    for (int i = 0; i < filledHistory; i++){
+        records[i] = new Record(*history.records[i]);
+    }
+}
 
 
 CurrencyHistory::~CurrencyHistory(){
@@ -234,7 +319,11 @@ void CurrencyHistory::setCurrencyPrices(const Currency& currency, const char* da
         }
     }
     if (!found_date){
-        if (filledHistory >= historyCapacity) return;
+        if (filledHistory >= historyCapacity) {
+            delete[] date;
+            delete[] currencyName;
+            return;
+        };
         records[filledHistory] = new Record(date);
         add_currency(records[filledHistory], currencyName, priceBuy, priceSell);
         filledHistory++;
@@ -275,6 +364,11 @@ public:
     void setSumIn(const double& sum_in);
 
     void initiate();
+
+    Transaction operator = (Transaction t);
+
+    friend std::ostream& operator<<(std::ostream& out, Transaction& transaction);
+
 
     ~Transaction();
 };
@@ -387,6 +481,50 @@ void Transaction::initiate(){
     }
 }
 
+Transaction Transaction::operator=(Transaction t){
+    if (this->client_name != nullptr){
+        delete[] this->client_name;
+    }
+    
+    if (date != nullptr){
+        delete[] date;
+    }
+    if (currency_in_name != nullptr){
+        delete[] currency_in_name;
+    }
+    if (currency_out_name != nullptr){
+        delete[] currency_out_name;
+    }
+
+    this->client_name = create_string_copy(t.client_name);
+    date = create_string_copy(t.date);
+    currency_in_name = create_string_copy(t.currency_in_name);
+    currency_out_name = create_string_copy(t.currency_out_name);
+    sum_in = t.sum_in;
+    sum_out = t.sum_out;
+    currency_in = t.currency_in;
+    currency_out = t.currency_out;
+    return (*this);
+}
+
+std::ostream& operator<<(std::ostream& out, Transaction& transaction){
+    out << '\n';
+    out << "##### Transactio info:\n";
+    out << "- Client_name: " << transaction.client_name << '\n';
+    out << "- Date: " << transaction.date << '\n';
+    out << "- Currencies: " << transaction.currency_in_name << " -> " << transaction.currency_out_name << '\n';
+    out << "- Money in: " << transaction.sum_in << " " << transaction.currency_in_name << '\n';
+    out << "- Money out: ";
+    if (!transaction.executed){
+        out << "??? " << transaction.currency_in_name << '\n';
+    } else {
+        out << transaction.sum_out << " " << transaction.currency_out_name << '\n';
+    }
+    
+    out << "- Execution state: " << transaction.executed << '\n';
+    out << '\n';
+    return out;
+}
 
 int main(){
 
@@ -409,12 +547,18 @@ int main(){
     history.setCurrencyPrices(MDL, "2026-10-13", 0.245, 0.265);
     history.setCurrencyPrices(EUR, "2026-10-13", 5.05, 5.15);
 
+    CurrencyHistory backUp(history);
+
+
+
     operator<<(std::cout, history);
+    operator<<(std::cout, backUp);
     
 
     Transaction t1(history, RON, USD);
     t1.setClientName("Anton");
     t1.setSumIn(1000);
+    operator<<(std::cout, t1);
     t1.initiate();
 
     return 0;
