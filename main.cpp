@@ -1,36 +1,21 @@
 #include <iostream>
-
+#include <cstring>
 const int recordCapacity = 10;
 
-int word_length(const char word[]);
 
 
-struct Word {
-    int length;
-    char* word;
+char* create_string_copy(const char* word_init){
+    char* word_dest = new char[strlen(word_init)+1];
+    word_dest = strcpy(word_dest, word_init);
+    return word_dest;
+}
 
-    Word(): length(0), word(nullptr){}
-
-    Word(char word_string[]){
-        length = word_length(word_string);
-        word = new char[length+1];
-
-        for (int i=0; i<length+1; i++){
-            word[i] = word_string[i];
-        }
-    }
-    ~Word(){
-        delete[] word;
-    }
-};
-
-void delete_word(Word* w);
 
 struct Record {
     int capacity;
     int filled;
-    Word* date;
-    Word** currencies;
+    char* date;
+    char** currencies;
     double* price_selling;
     double* price_buying;
 
@@ -42,19 +27,19 @@ struct Record {
         price_buying = nullptr;
         price_selling = nullptr;
     }
-    Record(Word* date){
+    Record(char* date){
         filled = 0;
         capacity = recordCapacity;
         this->date = date;
-        currencies = new Word*[recordCapacity];
+        currencies = new char*[recordCapacity];
         price_buying = new double[recordCapacity];
         price_selling = new double[recordCapacity];
     }
 
     ~Record(){
-        delete_word(date);
+        delete[] date;
         for (int j=0; j<filled; j++){
-            delete_word(currencies[j]);
+            delete[] currencies[j];
         }
         delete[] currencies;
         delete[] price_buying;
@@ -63,49 +48,10 @@ struct Record {
 };
 
 
-Word* create_word(int length, const char* word_array){
-    Word* w = new Word;
-    w->length = length;
-    w->word = new char[length+1];
 
-    for (int i=0; i<length+1; i++){
-        w->word[i] = word_array[i];
-    }
-
-    return w;
-}
-void delete_word(Word* w){
-    if (w == nullptr) return;
-    delete w;
-}
-bool verify_word_match(Word* word1, Word* word2){
-    if (word1->length != word2->length) return 0;
-    for (int i=0; i< word1->length; i++){
-        if (word1->word[i] != word2->word[i]) return 0;
-    }
-    return 1;
-}
-int word_length(const char word[]){
-    int i = 0;
-    while (word[i] != '\0') {
-        i++;
-    }
-    return i;
-}
-
-Record* create_record(Word* date){
-    Record* rec = new Record;
-    rec->filled = 0;
-    rec->date = date;
-    rec->capacity = recordCapacity;
-    rec->currencies = new Word*[recordCapacity];
-    rec->price_buying = new double[recordCapacity];
-    rec->price_selling = new double[recordCapacity];
-    return rec;
-}
-
-void add_currency(Record* record, Word* currency, double priceBuy, double priceSell){
+void add_currency(Record* record, char* currency, double priceBuy, double priceSell){
     int ix = record->filled;
+    if (ix >= record->capacity) return;
     record->currencies[ix] = currency;
     record->price_buying[ix] = priceBuy;
     record->price_selling[ix] = priceSell;
@@ -113,127 +59,118 @@ void add_currency(Record* record, Word* currency, double priceBuy, double priceS
 }
 
 
-void delete_record(Record* record){
-    delete record;
-}
-
-
 
 class Currency{
 private:
-    Word* name;
+    char* name;
     double total;
 public:
 
-    Currency() { name = nullptr; total = 0; }
-    Currency(char name[]);
-    Currency(char name[], double total);
+    Currency();
+    Currency(const char* name);
+    Currency(const char* name, const double& total);
 
-    Word* getName() const { return name; }
+    char* getName() const { return name; }
     double getTotal() const { return total; }
 
 
-    void setName(const char name[]){
-        if (this->name != nullptr){
-            delete_word(this->name);
-        }
+    void setName(const char* name);
+    void setTotal(const double& total);
 
-        this->name = create_word(word_length(name), name);
-    }
-    void setTotal(const double & total){
-        this->total = total;
-    }
-
-    ~Currency(){
-        delete_word(name);
-        std::cout << "deleted curency" << '\n';
-    }
+    ~Currency();
 };
 
-Currency::Currency(char name[]) { 
-    this->name = create_word(word_length(name), name); 
+Currency::Currency(){ 
+    name = nullptr; total = 0; 
+}
+Currency::Currency(const char* name) { 
+    this->name = create_string_copy(name);
     total = 0;
 }
-Currency::Currency(char name[], double total){ 
-    this->name = create_word(word_length(name), name);  
+Currency::Currency(const char* name, const double& total){ 
+    this->name = create_string_copy(name);
     this->total = total; 
 };
+
+void Currency::setName(const char* name){
+    if (this->name != nullptr){
+        delete[] this->name;
+    }
+    this->name = new char[strlen(name)+1];
+    this->name = strcpy(this->name, name);
+}
+void Currency::setTotal(const double& total){
+    this->total = total;
+}
+
+Currency::~Currency(){
+    delete[] name;
+    std::cout << "deleted curency" << '\n';
+}
+
 
 
 
 class CurrencyHistory{
 private:
-    Word* mainCurrency;
+    const Currency& mainCurrency;
     int historyCapacity;
     int filledHistory;
     Record** records;
 public:
-    CurrencyHistory();
-    CurrencyHistory(int historyCapacity);
-    CurrencyHistory(char currency[], int historyCapacity);
+    CurrencyHistory(const Currency& c, int h);
 
-    double getSellingPrice(Word* currencyName, Word* date) const;
-    double getBuyingPrice(Word* currencyName, Word* date) const;
-
-    void setCurrencyPrices(char curr_name[], char date_string[], double priceBuy, double priceSell);
-
-
+    double getSellingPrice(const Currency& currency, const char* date) const;
+    double getBuyingPrice(const Currency& currency, const char* date) const;
+    char* getLastDate() const;
+    char* getMainCurrencyName() const;
+    double getMainCurrencyTotal() const;
+    
+    void setCurrencyPrices(const Currency& currency, const char* date_string, const double& priceBuy, const double& priceSell);
 
     friend std::ostream& operator<<(std::ostream& out, CurrencyHistory& history);
     ~CurrencyHistory();
 };
 
-CurrencyHistory::CurrencyHistory(): mainCurrency(nullptr), historyCapacity(20), filledHistory(0){
-    this->records = new Record*[historyCapacity];
-    for (int i = 0; i < historyCapacity; i++) {
-        this->records[i] = nullptr;
-    }
-}
-CurrencyHistory::CurrencyHistory(int historyCapacity): mainCurrency(nullptr), filledHistory(0)  { 
-    this->historyCapacity=historyCapacity; 
+
+
+CurrencyHistory::CurrencyHistory(const Currency& c, int h)
+    : mainCurrency(c), historyCapacity(h), filledHistory(0){ 
     this->records = new Record*[historyCapacity];
     for (int i = 0; i < historyCapacity; i++) {
         this->records[i] = nullptr;
     }
 }
 
-CurrencyHistory::CurrencyHistory(char currency[], int historyCapacity): filledHistory(0){ 
-    mainCurrency = create_word(word_length(currency), currency);
-    this->historyCapacity=historyCapacity;
-    this->records = new Record*[historyCapacity];
-    for (int i = 0; i < historyCapacity; i++) {
-        this->records[i] = nullptr;
-    }
-}
+
+
 CurrencyHistory::~CurrencyHistory(){
-    delete_word(mainCurrency);
     for (int i=0; i<filledHistory; i++){
-        delete_record(records[i]);
+        delete records[i];
     }
     delete[] records;
     std::cout << "cleaned history\n";
 }
 
-double CurrencyHistory::getBuyingPrice(Word* currencyName, Word* date) const{
+double CurrencyHistory::getBuyingPrice(const Currency& currencyName, const char* date) const{
     for (int i=0; i<filledHistory; i++){
-        if (verify_word_match(records[i]->date, date)){
+        if (strcmp(records[i]->date, date) == 0){
             Record* passing_record = records[i];
             for (int j=0; j< passing_record->filled ; j++){
-                if (verify_word_match(passing_record->currencies[j], currencyName)){
+                if (strcmp(passing_record->currencies[j], currencyName.getName()) == 0){
                     return passing_record->price_buying[j];
                 }
             }
         }
     }
-    return 0.0f;
+    return 0.0;
 }
-
-double CurrencyHistory::getSellingPrice(Word* currencyName, Word* date) const{
+double CurrencyHistory::getSellingPrice(const Currency& currencyName, const char* date) const{
     for (int i=0; i<filledHistory; i++){
-        if (verify_word_match(records[i]->date, date)){
+        if ((strcmp(records[i]->date, date) == 0)){
             Record* passing_record = records[i];
             for (int j=0; j< passing_record->filled ; j++){
-                if (verify_word_match(passing_record->currencies[j], currencyName)){
+                if (strcmp(passing_record->currencies[j], currencyName.getName()) == 0){
                     return passing_record->price_selling[j];
                 }
             }
@@ -241,32 +178,46 @@ double CurrencyHistory::getSellingPrice(Word* currencyName, Word* date) const{
     }
     return 0.0f;;
 }
+char* CurrencyHistory::getLastDate() const{
+    if (filledHistory >= 1) {
+        return records[filledHistory-1]->date;
+    } else {
+        return nullptr;
+    }
+}
+
+char* CurrencyHistory::getMainCurrencyName() const{
+    return mainCurrency.getName();
+}
+double CurrencyHistory::getMainCurrencyTotal() const{
+    return mainCurrency.getTotal();
+}
 
 std::ostream& operator<<(std::ostream& out, CurrencyHistory& history){
     Record* curr_record;
     for (int i=0; i<history.filledHistory; i++){
         curr_record = history.records[i];
-        out << "#### "<< "Date " << curr_record->date->word << " contains this prices:" << '\n';
+        out << "#### "<< "Date " << curr_record->date<< " contains this prices:" << '\n';
         for (int j=0; j< curr_record->filled ; j++){
-            out << "-" << curr_record->currencies[j]->word << "   "<< "buy: " << curr_record->price_buying[j] << "   " << "sell: " << curr_record->price_selling[j] << '\n';
+            out << "-" << curr_record->currencies[j] << "   "<< "buy: " << curr_record->price_buying[j] << "   " << "sell: " << curr_record->price_selling[j] << '\n';
         }
     }
     return out;
 }
 
 
-void CurrencyHistory::setCurrencyPrices(char curr_Name[], char date_string[], double priceBuy, double priceSell){
-    Word* currencyName = create_word(word_length(curr_Name), curr_Name);
-    Word* date = create_word(word_length(date_string), date_string);
+void CurrencyHistory::setCurrencyPrices(const Currency& currency, const char* date_string, const double& priceBuy, const double& priceSell){
+    char* currencyName = create_string_copy(currency.getName());
+    char* date = create_string_copy(date_string);
     bool found_date = false;
     bool found_currency = false;
     for (int i=0; i<filledHistory; i++){
-        if (verify_word_match(records[i]->date, date)){
+        if (strcmp(records[i]->date, date) == 0){
             found_date = true;
 
             Record* passing_record = records[i];
             for (int j=0; j< passing_record->filled ; j++){
-                if (verify_word_match(passing_record->currencies[j], currencyName)){
+                if (strcmp(passing_record->currencies[j], currencyName) == 0){
                     found_currency = true;
                     passing_record->price_buying[j] = priceBuy;
                     passing_record->price_selling[j] = priceSell;
@@ -277,93 +228,194 @@ void CurrencyHistory::setCurrencyPrices(char curr_Name[], char date_string[], do
             if (!found_currency){
                 add_currency(records[i], currencyName, priceBuy, priceSell);
             } else {
-                delete currencyName;
+                delete[] currencyName;
             }
             break;
         }
     }
     if (!found_date){
-        records[filledHistory] = create_record(date);
+        if (filledHistory >= historyCapacity) return;
+        records[filledHistory] = new Record(date);
         add_currency(records[filledHistory], currencyName, priceBuy, priceSell);
         filledHistory++;
     }
     else{
-        delete date;
+        delete[] date;
     }
 }
 
 
-/*
-
-class Client{
-private:
-    std::string name;
-    std::string currencyGives;
-    std::string currencyGets;
-    int moneyGives;
-    int moneyGets;
-public:
-    Client(std::string name) { this->name = name; }
-    Client(std::string name, std::string currencyGives, std::string currencyGets) { 
-        this->name = name; 
-        this->currencyGives=currencyGives;
-        this->currencyGets=currencyGets;
-    }
-};
-
-
-*/
-
 
 class Transaction{
 private:
-    Currency* currency_in;
-    Currency* currency_out;
+    Currency& currency_in;
+    Currency& currency_out;
+    const CurrencyHistory& history;
+    char* client_name;
+    char* date;
+    char* currency_in_name;
+    char* currency_out_name;
     bool executed;
-    Word* client_name;
+    
     double sum_in;
     double sum_out;
 public:
     static int tranzaction_id;
-    Transaction();
-    Transaction(char client_name[], CurrencyHistory* history, Currency* currency_in, Currency* currency_out, double sum_in);
-    Transaction(char client_name[], CurrencyHistory* history, Currency* currency_in, Currency* currency_out);
-    Transaction(char client_name[], CurrencyHistory* history);
-    Transaction(char client_name[]);
+    Transaction(const CurrencyHistory& history, Currency& currency_in, Currency& currency_out);
+    Transaction(const CurrencyHistory& history, Currency& currency_in, Currency& currency_out, const char* client_name);
+    Transaction(const CurrencyHistory& history, Currency& currency_in, Currency& currency_out, const char* client_name, const double& sum_in);
     
 
+    char* getClientName() const;
+    double getSumIn() const;
+    double getSumOut() const;
+    char* getDate() const;
 
+    void setClientName(const char* client_name);
+    void setSumIn(const double& sum_in);
+
+    void initiate();
+
+    ~Transaction();
 };
 
 
 
+Transaction::Transaction(const CurrencyHistory& h, Currency& c_in, Currency& c_out)
+ : history(h), currency_in(c_in), currency_out(c_out){
+    this->client_name = nullptr;
+    date = create_string_copy(history.getLastDate());
+    currency_in_name = create_string_copy(currency_in.getName());
+    currency_out_name = create_string_copy(currency_out.getName());
+    sum_in=0;
+    sum_out=0;
+    executed=false;
+}
+Transaction::Transaction(const CurrencyHistory& h, Currency& c_in, Currency& c_out, const char* client_name)
+ : history(h), currency_in(c_in), currency_out(c_out){
+    this->client_name = create_string_copy(client_name);
+    date = create_string_copy(history.getLastDate());
+    currency_in_name = create_string_copy(c_in.getName());
+    currency_out_name = create_string_copy(c_out.getName());
+    sum_in=0;
+    sum_out=0;
+    executed=false;
+}
+Transaction::Transaction(const CurrencyHistory& h, Currency& c_in, Currency& c_out, const char* client_name, const double& sum_in)
+ : history(h), currency_in(c_in), currency_out(c_out){
+    this->client_name = create_string_copy(client_name);
+    date = create_string_copy(history.getLastDate());
+    currency_in_name = create_string_copy(c_in.getName());
+    currency_out_name = create_string_copy(c_out.getName());
+    this->sum_in=sum_in;
+    sum_out=0;
+    executed=false;
+}
+
+Transaction::~Transaction(){
+    if (client_name != nullptr) delete[] client_name;
+    if (date != nullptr) delete[] date;
+    if (currency_in_name != nullptr) delete[] currency_in_name;
+    if (currency_out_name != nullptr) delete[] currency_out_name;
+}
+
+char* Transaction::getClientName() const{
+    return client_name;
+}
+double Transaction::getSumIn() const{
+    return sum_in;
+}
+double Transaction::getSumOut() const{
+    return sum_out;
+}
+char* Transaction::getDate() const{
+    return date;
+}
+
+void Transaction::setClientName(const char* client_name){
+    if (this->client_name != nullptr){
+        delete[] this->client_name;
+    }
+    this->client_name = create_string_copy(client_name);
+}
+void Transaction::setSumIn(const double& sum_in){
+    this->sum_in = sum_in;
+}
+
+void Transaction::initiate(){
+
+    if (executed) {std::cout<<"Already processed tranzaction\n"; return;};
+
+    double payment;
+    
+    if (strcmp(currency_in.getName(), history.getMainCurrencyName()) == 0){
+        payment = sum_in / history.getBuyingPrice(currency_out, date);
+
+        if (payment < currency_out.getTotal()){
+            currency_in.setTotal(currency_in.getTotal() + sum_in);
+            currency_out.setTotal(currency_out.getTotal() - payment);
+            sum_out = payment;
+            std::cout << "Tranzaction succeded\n";
+            executed = true;
+        } else {
+            std::cout << "Tranzaction failed: insuficient money to pay\n";
+            return;
+        }
+    } else if(strcmp(currency_out.getName(), history.getMainCurrencyName()) == 0){
+        payment = sum_in * history.getSellingPrice(currency_in, date);
+
+        if (payment <= currency_out.getTotal()){
+            currency_in.setTotal(currency_in.getTotal() + sum_in);
+            currency_out.setTotal(currency_out.getTotal() - payment);
+            sum_out = payment;
+            std::cout << "Tranzaction succeded\n";
+            executed = true;
+        } else {
+            std::cout << "Tranzaction failed: insuficient money to pay\n";
+        }
+    } else {
+        double payment_intermid;
+        payment_intermid = sum_in * history.getSellingPrice(currency_in, date);
+        payment = payment_intermid / history.getBuyingPrice(currency_out, date);
+        if (payment < currency_out.getTotal()){
+            currency_in.setTotal(currency_in.getTotal() + sum_in);
+            currency_out.setTotal(currency_out.getTotal() - payment);
+            sum_out = payment;
+            std::cout << "Tranzaction succeded\n";
+            executed = true;
+        }
+    }
+}
 
 
 int main(){
-    char name1[] = "LEU";
-    char name2[] = "USD";
-    char name3[] = "MDL";
-    char name4[] = "EUR";
+
+    Currency RON("RON");
+    Currency USD("USD");
+    Currency MDL("MDL");
+    Currency EUR("EUR");
+
+    RON.setTotal(2000);
+    USD.setTotal(1000);
+    MDL.setTotal(20000);
+    EUR.setTotal(2000);
 
 
-    Currency c1(name1);
 
-    std::cout << c1.getName()->word << '\n';
-    std::cout << c1.getTotal() << '\n';
-    c1.setName(name2);
-    c1.setTotal(2000);
-    std::cout << c1.getName()->word << '\n';
-    std::cout << c1.getTotal() << '\n';
+    CurrencyHistory history(RON, 100);
 
-    char mainCurr[] = "LEU";
-    CurrencyHistory history(mainCurr, 100);
-    history.setCurrencyPrices(name2, "2026-10-12", 4.95, 4.99);
-    history.setCurrencyPrices(name3, "2026-10-12", 5.95, 5.99);
-    history.setCurrencyPrices(name2, "2026-10-13", 5.95, 5.99);
+
+    history.setCurrencyPrices(USD, "2026-10-13", 4.38, 4.50);
+    history.setCurrencyPrices(MDL, "2026-10-13", 0.245, 0.265);
+    history.setCurrencyPrices(EUR, "2026-10-13", 5.05, 5.15);
+
     operator<<(std::cout, history);
-    history.setCurrencyPrices(name2, "2026-10-13", 5.45, 5.69);
-    operator<<(std::cout, history);
- 
+    
+
+    Transaction t1(history, RON, USD);
+    t1.setClientName("Anton");
+    t1.setSumIn(1000);
+    t1.initiate();
 
     return 0;
 }
@@ -377,79 +429,9 @@ int main(){
 
 
 /*
-valute
-istoric valute
-clienti
-tranzactii
 
-valuta:
--denumire
--cantitate_totala
-
-totalitatea sumei accesibile pentru cumparare/vanzare fiecare valuta
-
-
-constructuri de initializare:
-(nume_valuta, suma_valuta_cumparare, suma_valuta_vanzare)
-
-
-
-
-istoric valute
--returneaza curs-vindere, curs-cumparare (pe baza la parametru data)
-
-
-constructuri de initializare:
-(valuta, pret_vanzare, pret_cumparare, data)
-
-
-
-
-client
--returneaza totalitatea clientilor
--returneaza istoria clientului
--permite vinderea/cumpararea valutei de catre client
--
-
-
-constructuri de initializare:
-(nume_client)
-
-
-
-tranzactii: ????
--istoria tranzactii(client, ...)
--
-
-
-
-
-
-
-
--------
-creez totalurile:
-
-
-
-
-creez clientii.
-
-
-
-clientii sunt initializati()
-
-
-
-
-tranzactia are: data, client, 
-
-
-
-
-
-
-
+Add the constructor de copiere, = operator
+<< constructors for all the classes
 
 
 
