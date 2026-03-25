@@ -134,7 +134,7 @@ void Currency::setTotal(const double& total){
     this->total = total;
 }
 
-std::ostream& operator<<(std::ostream& out, Currency& currency){
+std::ostream& operator<<(std::ostream& out, const Currency& currency){
     out << "Currency: " << currency.name << " Total: " << std::fixed << std::setprecision(2) << currency.total << '\n';
     return out;
 }
