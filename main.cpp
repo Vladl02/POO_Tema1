@@ -28,10 +28,10 @@ struct Record {
         price_buying = nullptr;
         price_selling = nullptr;
     }
-    Record(char* date){
+    Record(const char* date){
         filled = 0;
         capacity = recordCapacity;
-        this->date = date;
+        this->date = create_string_copy(date);
         currencies = new char*[recordCapacity];
         price_buying = new double[recordCapacity];
         price_selling = new double[recordCapacity];
@@ -68,10 +68,10 @@ struct Record {
 };
 
 
-bool add_currency(Record* record, char* currency, double priceBuy, double priceSell){
+bool add_currency(Record* record, const char* currency, double priceBuy, double priceSell){
     int ix = record->filled;
     if (ix >= record->capacity) return false;
-    record->currencies[ix] = currency;
+    record->currencies[ix] = create_string_copy(currency);
     record->price_buying[ix] = priceBuy;
     record->price_selling[ix] = priceSell;
     record->filled += 1;
@@ -99,7 +99,7 @@ public:
     void setName(const char* name);
     void setTotal(const double& total);
 
-    friend std::ostream& operator<<(std::ostream& out, Currency& history);
+    friend std::ostream& operator<<(std::ostream& out,const Currency& currency);
     Currency& operator=(const Currency& c);
 
     ~Currency();
@@ -177,7 +177,7 @@ public:
 
     bool verifyCurrency(const Currency& currency, const char* date) const;
 
-    friend std::ostream& operator<<(std::ostream& out, CurrencyHistory& history);
+    friend std::ostream& operator<<(std::ostream& out, const CurrencyHistory& history);
     ~CurrencyHistory();
 };
 
@@ -251,7 +251,7 @@ double CurrencyHistory::getMainCurrencyTotal() const{
     return mainCurrency.getTotal();
 }
 
-std::ostream& operator<<(std::ostream& out, CurrencyHistory& history){
+std::ostream& operator<<(std::ostream& out, const CurrencyHistory& history){
     Record* curr_record;
     out << "---------------  Currency History  ------------------\n";
     for (int i=0; i<history.filledHistory; i++){
@@ -527,7 +527,7 @@ std::ostream& operator<<(std::ostream& out, Transaction& transaction){
     out << "- Money in: " << std::fixed << std::setprecision(2) << transaction.sum_in << " " << transaction.currency_in_name << '\n';
     out << "- Money out: ";
     if (!transaction.executed){
-        out << "??? " << transaction.currency_in_name << '\n';
+        out << "??? " << transaction.currency_out_name << '\n';
         out << "- Execution state: " << "Pending" << '\n';
     } else {
         out << std::fixed << std::setprecision(2) << transaction.sum_out << " " << transaction.currency_out_name << '\n';
