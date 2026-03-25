@@ -12,7 +12,7 @@ setteri:
 - setName()
 - setTotal()
 
-operatori:
+overload la operatori:
 - <<
 - =
 
@@ -36,7 +36,7 @@ setteri:
 alte metode:
 - verifyCurrency() - verifică prezența datelor despre o anumită valuta la o anumita dată
 
-operatori:
+overload la operatori:
 - <<
 
 
@@ -65,7 +65,7 @@ alte functii:
 - initiate() - inițiază tranzacția
 - verifyTransactionInfo() - verifică dacă tranzacția are suficientă informație pentru a fi executată
 
-operatori:
+overload la operatori:
 - <<
 
 conține destructor(eliberează memoria alocată dinamic);
