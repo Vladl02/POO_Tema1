@@ -68,8 +68,6 @@ struct Record {
 };
 
 
-
-
 bool add_currency(Record* record, char* currency, double priceBuy, double priceSell){
     int ix = record->filled;
     if (ix >= record->capacity) return false;
@@ -79,6 +77,7 @@ bool add_currency(Record* record, char* currency, double priceBuy, double priceS
     record->filled += 1;
     return true;
 }
+
 
 
 
@@ -156,6 +155,8 @@ Currency::~Currency(){
 }
 
 
+
+
 class CurrencyHistory{
 private:
     const Currency& mainCurrency;
@@ -208,6 +209,7 @@ CurrencyHistory::~CurrencyHistory(){
     delete[] records;
 }
 
+
 double CurrencyHistory::getBuyingPrice(const Currency& currencyName, const char* date) const{
     for (int i=0; i<filledHistory; i++){
         if (strcmp(records[i]->date, date) == 0){
@@ -221,7 +223,6 @@ double CurrencyHistory::getBuyingPrice(const Currency& currencyName, const char*
     }
     return 0.0;
 }
-
 double CurrencyHistory::getSellingPrice(const Currency& currencyName, const char* date) const{
     for (int i=0; i<filledHistory; i++){
         if ((strcmp(records[i]->date, date) == 0)){
@@ -313,7 +314,6 @@ void CurrencyHistory::setCurrencyPrices(const Currency& currency, const char* da
         delete[] date;
     }
 }
-
 bool CurrencyHistory::verifyCurrency(const Currency& currency, const char* date) const{
     for (int i=0; i<filledHistory; i++){
         if (strcmp(records[i]->date, date) == 0){
@@ -327,6 +327,7 @@ bool CurrencyHistory::verifyCurrency(const Currency& currency, const char* date)
     }
     return false;
 }
+
 
 
 class Transaction{
@@ -343,7 +344,6 @@ private:
     double sum_in;
     double sum_out;
 public:
-    static int tranzaction_id;
     Transaction(const CurrencyHistory& history, Currency& currency_in, Currency& currency_out);
     Transaction(const CurrencyHistory& history, Currency& currency_in, Currency& currency_out, const char* client_name);
     Transaction(const CurrencyHistory& history, Currency& currency_in, Currency& currency_out, const char* client_name, const double& sum_in);
@@ -521,7 +521,7 @@ std::ostream& operator<<(std::ostream& out, Transaction& transaction){
     if (!transaction.verifyTransactionInfo()) return out;
     out << '\n';
     out << "--------  Transaction info  ---------\n";
-    out << "- Client_name: " << transaction.client_name << '\n';
+    out << "- Client name: " << transaction.client_name << '\n';
     out << "- Date: " << transaction.date << '\n';
     out << "- Currencies: " << transaction.currency_in_name << " -> " << transaction.currency_out_name << '\n';
     out << "- Money in: " << std::fixed << std::setprecision(2) << transaction.sum_in << " " << transaction.currency_in_name << '\n';
@@ -541,24 +541,23 @@ std::ostream& operator<<(std::ostream& out, Transaction& transaction){
 
 
 
-
-
-
 int main(){
-    bool terminal = true;
+    bool terminal = false;
 
-
-    Currency RON("RON");
+    // inițializări valute
+    Currency RON("RON", 2000);
+    Currency RON_init(RON);
     Currency USD("USD");
     Currency MDL("MDL");
-    Currency EUR("EUR");
+    Currency EUR;
 
     RON.setTotal(2000);
     USD.setTotal(1000);
     MDL.setTotal(20000);
-    EUR.setTotal(2000);
 
-    operator<<(std::cout, RON);
+    EUR.setTotal(2000);
+    EUR.setName("EUR");
+
 
 
     CurrencyHistory history(RON, 100);
@@ -583,28 +582,48 @@ int main(){
     
     
     if (!terminal){
+
         operator<<(std::cout, history);
         operator<<(std::cout, historyBackUp);
-        Transaction t1(history, RON, USD);
-        t1.setClientName("Anton");
-        t1.setSumIn(1000);
+
+        // getteri la CurrencyHistory
+        std::cout << "Main currency: " << history.getMainCurrencyName() << ", total: ";
+        std::cout << history.getMainCurrencyTotal() << '\n';
+        std::cout << "EUR buying price: " << history.getBuyingPrice(EUR, "20-03-2026") << '\n';
+        std::cout << "EUR buying price: " << history.getSellingPrice(EUR,  "20-03-2026") << '\n';
+        
+
+        // initializari de tranzactii
+        Transaction t1(history, RON, USD, "Anton", 1000);
+
+
         Transaction t2(history, USD, RON);
         t2.setClientName("Anton");
+
+        
+
+        t1.initiate();
+        t2.setSumIn(t1.getSumOut());
+        t2.initiate();
+
+        // info t1
+        operator<<(std::cout, t1);
+        
+        // info t2
+        std::cout << "t2 info: \n";
+        std::cout << "Client name: " << t2.getClientName() << '\n';
+        std::cout << "Sum in: " << t2.getSumIn() << '\n';
+        std::cout << "Sum out: " << t2.getSumOut() << '\n';
+        std::cout << "Date: " << t2.getDate() << '\n' << '\n';
+
+        operator<<(std::cout, RON);
+        std::cout << RON_init.getName() << ": " << RON_init.getTotal() << '\n';
+
+
     }
     
     
     
-    //t1.initiate();
-    //t2.setSumIn(t1.getSumOut());
-    //t2.initiate();
-
-
-    //operator<<(std::cout, t1);
-    //operator<<(std::cout, t2);
-
-    //operator<<(std::cout, USD);
-    //operator<<(std::cout, RON);
-
 
     char option1;
     char option2;
@@ -622,7 +641,7 @@ int main(){
         std::cout << "d - opreste program\n";
         std::cout << "Introdu: ";
         
-        
+    
         std::cin >> option1;
         system("cls"); 
 
@@ -706,11 +725,10 @@ int main(){
 
             break;
         case 'c':
-            std::cout << RON.getName() << ": " << RON.getTotal() << '\n';
-            std::cout << USD.getName() << ": " << USD.getTotal() << '\n'; 
-            std::cout << EUR.getName() << ": " << EUR.getTotal() << '\n'; 
-            std::cout << MDL.getName() << ": " << MDL.getTotal() << '\n'; 
-            std::cout << '\n';
+            operator<<(std::cout, RON);
+            operator<<(std::cout, USD);
+            operator<<(std::cout, EUR);
+            operator<<(std::cout, MDL);
             break;
         case 'd':
             terminal = false;
@@ -728,21 +746,6 @@ int main(){
 }
 
 
-
-
-
-
-
-
-
-/*
-
-Add the constructor de copiere, = operator
-<< constructors for all the classes
-
-
-
-*/
 
 
 
