@@ -7,8 +7,8 @@ Obiectul ce reprezintă valuta (numele și totalul resurselor valutei date deți
 
 
 getteri:
--getName()
--getTotal()
+--getName()
+--getTotal()
 
 setteri:
 -setName()
