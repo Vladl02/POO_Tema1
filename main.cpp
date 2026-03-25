@@ -542,7 +542,7 @@ std::ostream& operator<<(std::ostream& out, Transaction& transaction){
 
 
 int main(){
-    bool terminal = false;
+    bool terminal = true;
 
     // inițializări valute
     Currency RON("RON", 2000);
@@ -698,7 +698,7 @@ int main(){
             if (currency_in == nullptr || currency_out == nullptr) break;
 
             if (option2 == option3){
-                std::cout << "A fost introdusa aceeasi valută de intrare si iesire, tranzactia nu poate fi infaptuita";
+                std::cout << "A fost introdusa aceeasi valuta de intrare si iesire, tranzactia nu poate fi infaptuita\n";
                 break;
             }
 
