@@ -6,7 +6,7 @@
 Obiectul ce reprezintă valuta (numele și totalul resurselor valutei date deținute de casa de schimba valutar)
 
 
-getteri:
+getteri:_
 --getName()
 --getTotal()
 
