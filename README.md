@@ -1,61 +1,57 @@
-# Casă de schimb valutar
-
+# Casa de schimb valutar
 
 ### Clasa 1: Currency
 
-Obiectul ce reprezintă valuta (numele și totalul resurselor valutei date deținute de casa de schimba valutar)
+Obiectul care reprezinta valuta (numele si totalul resurselor valutei detinute de casa de schimb valutar).
 
-
-getteri:__
---getName()
---getTotal()
+getteri:
+- getName()
+- getTotal()
 
 setteri:
--setName()
--setTotal()
+- setName()
+- setTotal()
 
--operator <<, operator =
-
+operatori:
+- operator<<
+- operator=
 
 ### Clasa 2: CurrencyHistory
 
-Obiectul ce reprezintă istoricul prețurilor setate de casa de schimb valutar(inclusiv cele mai recente prețuri),
-Istoricul obligator este inițializat cu referință la obiectul valutei de bază;
+Obiectul care reprezinta istoricul preturilor setate de casa de schimb valutar (inclusiv cele mai recente preturi).
+Istoricul este initializat cu referinta la obiectul valutei de baza.
 
 getteri:
--getBuyingPrice - returneaza pretul de vanzare in dependenta de data si valuta indicata
--getSellingPrice - returneaza pretul de cumparare in dependenta de data si valuta indicata
--getLastDate - returneaza ultima dată introdusă in istoric(aceasta fiind data de azi)
--getMainCurrency - returneaza valuta de bază a cursului valutar
--getMainCurrencyTotal - returneaza totalul valutei de bază in posesia cursului valutar
+- getBuyingPrice() - returneaza pretul de cumparare in functie de data si valuta indicata
+- getSellingPrice() - returneaza pretul de vanzare in functie de data si valuta indicata
+- getLastDate() - returneaza ultima data introdusa in istoric (considerata data curenta)
+- getMainCurrencyName() - returneaza valuta de baza a cursului valutar
+- getMainCurrencyTotal() - returneaza totalul valutei de baza in posesia casei
 
 setteri:
--SetCurrencyPrices - seteaza preturile de cumparat si vinzare a unei valute intr-o anumita zi
+- setCurrencyPrices() - seteaza preturile de cumparare si vanzare ale unei valute intr-o anumita zi
 
-alte Metode:
--verifyCurrency - verifică prezența datelor despre o anumită valută pe o anumita dată
-
+alte metode:
+- verifyCurrency() - verifica prezenta datelor despre o anumita valuta la o anumita data
 
 ### Clasa 3: Transaction
 
-Obiectul tranzactia casei de schimb valutare
-La inițializare, obligatoriu trebuie să obțină referința obiectele de tip:
-1) CurrencyHistory , de unde obține cursurile valutelor
-2) Currency, care resprezinta valuta banilor aduși de client
-3) Currency, care reprezintă valuta în care clientul dorește să schimbe banii
-
+Obiectul care reprezinta tranzactia casei de schimb valutar.
+La initializare, trebuie sa primeasca referinte la obiectele de tip:
+1. CurrencyHistory - de unde obtine cursurile valutelor
+2. Currency - valuta banilor adusi de client
+3. Currency - valuta in care clientul doreste sa schimbe banii
 
 getteri:
--getClientName - returneaza numele ce clientului ce inițiază tranzacția
--getSumIn - returneaza suma introdusa de client
--getSumOut - returneaza suma pe clientul obține la tranzacție
--getDate - returnează data tranzacției
+- getClientName() - returneaza numele clientului care initiaza tranzactia
+- getSumIn() - returneaza suma introdusa de client
+- getSumOut() - returneaza suma pe care clientul o obtine la tranzactie
+- getDate() - returneaza data tranzactiei
 
 setteri:
--setClientName - seteaza numele ce clientului ce inițiază tranzacția
--setSumIn - seteaza cantitatea de bani pe care o dă clientul
+- setClientName() - seteaza numele clientului care initiaza tranzactia
+- setSumIn() - seteaza cantitatea de bani pe care o da clientul
 
-
-alte funcții:
--initiate - initiază tranzacția
--verifyTransactionInfo - verifica daca tranzactia are destula informatie pentru a fie executata
+alte functii:
+- initiate() - initiaza tranzactia
+- verifyTransactionInfo() - verifica daca tranzactia are suficienta informatie pentru a fi executata
