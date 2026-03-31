@@ -2,7 +2,10 @@
 #include <iomanip>
 #include <cstring>
 #include <cstdlib>
+
+
 const int recordCapacity = 10;
+
 
 
 char* create_string_copy(const char* word_init){
@@ -123,7 +126,6 @@ Currency::Currency(const char* name, const double& total){
 
 
 
-
 void Currency::setName(const char* name){
     if (this->name != nullptr){
         delete[] this->name;
@@ -157,6 +159,7 @@ Currency::~Currency(){
 
 
 
+
 class CurrencyHistory{
 private:
     const Currency& mainCurrency;
@@ -183,7 +186,10 @@ public:
 
 
 
-CurrencyHistory::CurrencyHistory(const Currency& c, int h)
+
+
+
+CurrencyHistory::CurrencyHistory(const Currency& c, int h) 
     : mainCurrency(c), historyCapacity(h), filledHistory(0){ 
     this->records = new Record*[historyCapacity];
     for (int i = 0; i < historyCapacity; i++) {
@@ -340,6 +346,7 @@ private:
     char* currency_in_name;
     char* currency_out_name;
     bool executed;
+    int id;
     
     double sum_in;
     double sum_out;
@@ -348,6 +355,8 @@ public:
     Transaction(const CurrencyHistory& history, Currency& currency_in, Currency& currency_out, const char* client_name);
     Transaction(const CurrencyHistory& history, Currency& currency_in, Currency& currency_out, const char* client_name, const double& sum_in);
     
+    static int num_transactions;
+
 
     const char* getClientName() const;
     double getSumIn() const;
@@ -367,6 +376,9 @@ public:
 };
 
 
+int Transaction::num_transactions = 0;
+
+
 
 Transaction::Transaction(const CurrencyHistory& h, Currency& c_in, Currency& c_out)
  : history(h), currency_in(c_in), currency_out(c_out){
@@ -376,6 +388,8 @@ Transaction::Transaction(const CurrencyHistory& h, Currency& c_in, Currency& c_o
     currency_out_name = create_string_copy(currency_out.getName());
     sum_in=0;
     sum_out=0;
+    id = num_transactions;
+    this->num_transactions++;
     executed=false;
 }
 Transaction::Transaction(const CurrencyHistory& h, Currency& c_in, Currency& c_out, const char* client_name)
@@ -386,6 +400,8 @@ Transaction::Transaction(const CurrencyHistory& h, Currency& c_in, Currency& c_o
     currency_out_name = create_string_copy(c_out.getName());
     sum_in=0;
     sum_out=0;
+    id = num_transactions;
+    this->num_transactions++;
     executed=false;
 }
 Transaction::Transaction(const CurrencyHistory& h, Currency& c_in, Currency& c_out, const char* client_name, const double& sum_in)
@@ -396,6 +412,8 @@ Transaction::Transaction(const CurrencyHistory& h, Currency& c_in, Currency& c_o
     currency_out_name = create_string_copy(c_out.getName());
     this->sum_in=sum_in;
     sum_out=0;
+    id = num_transactions;
+    this->num_transactions++;
     executed=false;
 }
 
@@ -521,6 +539,7 @@ std::ostream& operator<<(std::ostream& out, Transaction& transaction){
     if (!transaction.verifyTransactionInfo()) return out;
     out << '\n';
     out << "--------  Transaction info  ---------\n";
+    out << "- id: " << transaction.id << '\n';
     out << "- Client name: " << transaction.client_name << '\n';
     out << "- Date: " << transaction.date << '\n';
     out << "- Currencies: " << transaction.currency_in_name << " -> " << transaction.currency_out_name << '\n';
@@ -542,17 +561,23 @@ std::ostream& operator<<(std::ostream& out, Transaction& transaction){
 
 
 int main(){
-    bool terminal = true;
+
+    // determina daca programul e in regim interactiv sau nu
+    bool interactive = true;
+
 
     // inițializări valute
     Currency RON("RON", 2000);
     Currency RON_init(RON);
     Currency USD("USD");
+    Currency USD_init;
+    USD_init = USD;
     Currency MDL("MDL");
     Currency EUR;
 
     RON.setTotal(2000);
     USD.setTotal(1000);
+    USD_init = USD;
     MDL.setTotal(20000);
 
     EUR.setTotal(2000);
@@ -580,8 +605,8 @@ int main(){
 
 
     
-    
-    if (!terminal){
+    // mod non interactiv, demonstrez functionalitatea elementelor implimentate
+    if (!interactive){
 
         operator<<(std::cout, history);
         operator<<(std::cout, historyBackUp);
@@ -596,6 +621,10 @@ int main(){
         // initializari de tranzactii
         Transaction t1(history, RON, USD, "Anton", 1000);
 
+        std::cout << '\n';
+        std::cout << "Sunt EUR pe data de 20-03-2026 in istoric: " << history.verifyCurrency(EUR, "20-03-2026") << '\n';
+        std::cout << '\n';
+
 
         Transaction t2(history, USD, RON);
         t2.setClientName("Anton");
@@ -603,6 +632,8 @@ int main(){
         
 
         t1.initiate();
+        std::cout << USD_init.getName() << ": " << USD_init.getTotal() << " -> ";
+        std::cout << USD.getName() << ": " << USD.getTotal() << '\n';
         t2.setSumIn(t1.getSumOut());
         t2.initiate();
 
@@ -617,7 +648,9 @@ int main(){
         std::cout << "Date: " << t2.getDate() << '\n' << '\n';
 
         operator<<(std::cout, RON);
-        std::cout << RON_init.getName() << ": " << RON_init.getTotal() << '\n';
+        
+        operator<<(std::cout, USD);
+
 
 
     }
@@ -633,7 +666,10 @@ int main(){
     Transaction* t = nullptr;
     Currency* currency_in = nullptr;
     Currency* currency_out = nullptr;
-    while (terminal){
+
+
+    // versiunea interactiva
+    while (interactive){
         std::cout << "### Alege Optiune: \n";
         std::cout << "a - Obtine istoric curs valutar\n";
         std::cout << "b - Initiaza tranzactie\n";
@@ -731,7 +767,7 @@ int main(){
             operator<<(std::cout, MDL);
             break;
         case 'd':
-            terminal = false;
+            interactive = false;
             break;
         default:
             break;
