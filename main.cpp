@@ -132,7 +132,7 @@ void Currency::setName(const char* name){
     }
     this->name = create_string_copy(name);
 }
-void Currency::setTotal(const double& total){
+inline void Currency::setTotal(const double& total){
     this->total = total;
 }
 
@@ -424,16 +424,16 @@ Transaction::~Transaction(){
     if (currency_out_name != nullptr) delete[] currency_out_name;
 }
 
-const char* Transaction::getClientName() const{
+inline const char* Transaction::getClientName() const{
     return client_name;
 }
-double Transaction::getSumIn() const{
+inline double Transaction::getSumIn() const{
     return sum_in;
 }
-double Transaction::getSumOut() const{
+inline double Transaction::getSumOut() const{
     return sum_out;
 }
-const char* Transaction::getDate() const{
+inline const char* Transaction::getDate() const{
     return date;
 }
 
