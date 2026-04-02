@@ -15,6 +15,7 @@ char* create_string_copy(const char* word_init){
     return word_dest;
 }
 
+// structura ajutatoare care pastreaza informatii despre cursul valutar dintr-o anumită dată
 struct Record {
     int capacity;
     int filled;
@@ -70,7 +71,7 @@ struct Record {
     }
 };
 
-
+// functie care intr-un obiect Record deja existent adauga informatia despre o anumita valuta(precul de vanzare si cumparare)
 bool add_currency(Record* record, const char* currency, double priceBuy, double priceSell){
     int ix = record->filled;
     if (ix >= record->capacity) return false;
@@ -82,8 +83,7 @@ bool add_currency(Record* record, const char* currency, double priceBuy, double 
 }
 
 
-
-
+// clasa Currency contine denumirea valutei si total-ul ei detinut de casa de curs valutar(acest total se schimba in dependenta de tranzactii)
 class Currency{
 private:
     char* name;
@@ -159,12 +159,11 @@ Currency::~Currency(){
 
 
 
-
 class CurrencyHistory{
 private:
-    const Currency& mainCurrency;
-    int historyCapacity;
-    int filledHistory;
+    const Currency& mainCurrency; // orice casa de schimb valutar are o valuta de baza in care arata preturile si cu care opereaza( in Romania de exemplu e RON)
+    int historyCapacity; 
+    int filledHistory; // mentru a monitoriza faptul ca programul nu intrece limita maxima de valori in istoric
     Record** records;
 public:
     CurrencyHistory(const Currency& c, int h);
@@ -242,6 +241,7 @@ double CurrencyHistory::getSellingPrice(const Currency& currencyName, const char
     }
     return 0.0f;;
 }
+
 const char* CurrencyHistory::getLastDate() const{
     if (filledHistory >= 1) {
         return records[filledHistory-1]->date;
@@ -335,9 +335,15 @@ bool CurrencyHistory::verifyCurrency(const Currency& currency, const char* date)
 }
 
 
-
+/*
+Tranzactia e obiectul ce reprezinta schimbul valutar dintre client si casă de schimb valutar
+Insa-si tranzactia are loc doar la accesarea metodei initiate(). Dacă sunt respectate toate conditiile, 
+tranzactia are loc si nu se updatea-za totalurile valutelor din casa de schimb valutar.
+O data ce tranzactia a fost executata, ea nu poate fi executata din nou(lucru controlat de variabila privata executed)
+*/
 class Transaction{
 private:
+    // Obiectul tranzactie detine referinta la doua valute ale casei de schimb valutar pentru a le putea updata totalurile dupa tranzactie
     Currency& currency_in;
     Currency& currency_out;
     const CurrencyHistory& history;
@@ -605,7 +611,7 @@ int main(){
 
 
     
-    // mod non interactiv, demonstrez functionalitatea elementelor implimentate
+    // mod neinteractiv, demonstrez functionalitatea elementelor implementate
     if (!interactive){
 
         operator<<(std::cout, history);
@@ -668,7 +674,7 @@ int main(){
     Currency* currency_out = nullptr;
 
 
-    // versiunea interactiva
+    // versiunea interactiva in terminal
     while (interactive){
         std::cout << "### Alege Optiune: \n";
         std::cout << "a - Obtine istoric curs valutar\n";
